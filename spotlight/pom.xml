@@ -18,8 +18,9 @@
   <properties>
     <databus.documentation><![CDATA[
 	## Update, March 2020
-
 This update generates and upload to dbpedia databus the artifacts of dbpedia-models and wikistatsextractor for all langauges.
+Contains some fixes from [Klaus82](https://github.com/dbpedia-spotlight/model-quickstarter/pull/20)
+The update is available in [Julio-Noe's Github repo](https://github.com/Julio-Noe/model-quickstarter) and will be merged soon into the spotlight repo.
 
 ## Update, January 2016
 
@@ -58,16 +59,14 @@ If you use the current (statistical version) of DBpedia Spotlight or the data/mo
     ]]> </databus.documentation>
     <databus.license>http://purl.oclc.org/NET/rdflicense/cc-by3.0</databus.license>
     <databus.codeReference>https://github.com/dbpedia-spotlight/model-quickstarter</databus.codeReference>
-    <databus.issueTracker>https://github.com/dbpedia-spotlight/model-quickstarter/issuess</databus.issueTracker>
-    <databus.documentationLocation>https://github.com/dbpedia/databus-maven-plugin/blob/master/dbpedia/${project.groupId}/${project.artifactId}</databus.documentationLocation>
-    <databus.downloadUrlPath>https://github.com/ragnarok85/ragnarok85.github.io/raw/master/${project.groupId}/${project.artifactId}/${project.version}/</databus.downloadUrlPath>
+    <databus.issueTracker>https://github.com/dbpedia-spotlight/model-quickstarter/issues</databus.issueTracker>
+    <databus.documentationLocation>https://github.com/Julio-Noe/model-quickstarter/blob/master/spotlight/pom.xml</databus.documentationLocation>
+    <databus.downloadUrlPath>http://downloads.dbpedia.org/repo/dbpedia/${project.groupId}/${project.artifactId}/${project.version}/</databus.downloadUrlPath>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <databus.packageDirectory>${session.executionRootDirectory}/target/repo/ragnarok85/${project.groupId}/${project.artifactId}/</databus.packageDirectory>
+    <databus.packageDirectory>${project.build.directory}/databus/repo/dbpedia/${project.groupId}/${project.artifactId}/</databus.packageDirectory>
     <databus.tryVersionAsIssuedDate>true</databus.tryVersionAsIssuedDate>
-    <databus.publisher>https://ragnarok85.github.io/webid.ttl#this</databus.publisher>
+    <databus.publisher>https://webid.dbpedia.org/webid.ttl#this</databus.publisher>
     <databus.feedbackChannel>https://forum.dbpedia.org/c/databus-dbpedia/spotlight</databus.feedbackChannel>
-      <!-- used for derive plugin -->
-    <databus.deriveversion>${project.version}</databus.deriveversion>
   </properties>
   <repositories>
     <repository>
@@ -106,62 +105,36 @@ If you use the current (statistical version) of DBpedia Spotlight or the data/mo
 	</plugin>
       </plugins>
     </build> -->
-
-<!--  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.dbpedia.databus</groupId>
-        <artifactId>databus-derive-maven-plugin</artifactId>
-        <version>1.0-SNAPSHOT</version>
-        <executions>
-          <execution>
-            <id>DeriveFromMarvin</id>
-            <goals>
-              <goal>clone</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-	  <skipParsing>false</skipParsing>
-	  <skipCloning>false</skipCloning>
-          <versions>
-            <version>https://databus.dbpedia.org/marvin/spotlight/geo-coordinates-mappingbased/${databus.deriveversion}</version>
-            <version>https://databus.dbpedia.org/marvin/spotlight/instance-types/${databus.deriveversion}</version>
-            <version>https://databus.dbpedia.org/marvin/spotlight/mappingbased-literals/${databus.deriveversion}</version>
-            <version>https://databus.dbpedia.org/marvin/spotlight/mappingbased-objects-uncleaned/${databus.deriveversion}</version>
-            <version>https://databus.dbpedia.org/marvin/spotlight/mappingbased-objects/${databus.deriveversion}</version>
-            <version>https://databus.dbpedia.org/marvin/spotlight/specific-mappingbased-properties/${databus.deriveversion}</version>
-          </versions>
-        </configuration>
-      </plugin>
-    </plugins> 
-  </build> -->
-<!--  <profiles>
+    
+<profiles>
     <profile>
-      <id>download-pre-release</id>
+      <id>webdav</id>
       <build>
         <plugins>
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
-            <artifactId>exec-maven-plugin</artifactId>
-            <version>1.3.2</version>
+            <artifactId>wagon-maven-plugin</artifactId>
+            <version>2.0.0</version>
             <executions>
               <execution>
+                <id>upload-databus</id>
+                <phase>install</phase>
                 <goals>
-                  <goal>exec</goal>
+                  <goal>upload</goal>
                 </goals>
+                <configuration>
+                  <fromDir>${project.build.directory}/databus/repo/dbpedia/${project.groupId}/${project.artifactId}</fromDir>
+                  <url>dav:https://downloads.dbpedia.org/repo/</url>
+                  <toDir>dbpedia/${project.groupId}/${project.artifactId}</toDir>
+                  <serverId>downloads-dbpedia-org</serverId>
+                </configuration>
               </execution>
             </executions>
-            <configuration>
-              <executable>../download-pre-release.sh</executable>
-              <arguments>
-                <argument>${project.groupId}</argument>
-                <argument>${project.artifactId}</argument>
-              </arguments>
-            </configuration>
           </plugin>
         </plugins>
       </build>
     </profile>
-  </profiles> -->
+  </profiles>
+
+
 </project>
