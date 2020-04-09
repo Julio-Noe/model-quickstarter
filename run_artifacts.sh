@@ -21,7 +21,7 @@ BASE_DIR=$(pwd)
 BASE_WDIR=$BASE_DIR/wdir
 BASE_ARTIFACTDIR=$BASE_DIR/spotlight
 
-#Here start the iteration
+#Iteration
 for lang in $StringLanguages; do
      echo $lang
      LANGUAGE=`echo $lang | sed "s/_.*//g"`
@@ -198,8 +198,10 @@ for lang in $StringLanguages; do
     rm -r $TMPDOWN
 
    if [ $ALLFINE ]; then
-        echo "Artifact(s) ("$MISSING_ARTIFACTS") missing, for more details about this please refer to https://forum.dbpedia.org/t/tasks-for-volunteers/163, task: 'Languages with missing redirects/disambiguations/instance-type'"
-        echo $lang >> missingArtifacts.txt
+        echo "##########################################################################################################"
+        echo "######Artifact(s) ("$MISSING_ARTIFACTS") missing, for more details about this please refer to https://forum.dbpedia.org/t/tasks-for-volunteers/163, task: 'Languages with missing redirects/disambiguations/instance-type'"
+        echo "##########################################################################################################"
+        echo $LOCALE >> $BASE_DIR/missingArtifacts.txt
         continue
    fi
 
