@@ -4,10 +4,12 @@
 #| @author Joachim Daiber                                                                                                       |
 #+------------------------------------------------------------------------------------------------------------------------------+
 
+export LC_ALL=en_US.UTF-8
 export MAVEN_OPTS="-Xmx26G"
 
 #StringLanguages="en_US-English de_DE-German nl_NL-Dutch sv_SE-Swedish pt_BR-Portuguese fr_FR-French es_ES-Spanish tr_TR-Turkish no_NO-Norwegian it_IT-Italian da_DK-Danish ja_JP-None cs_CZ-None hu_HU-Hungarian ru_RU-Russian zh_CN-None"
-StringLanguages="cs_CZ-None it_IT-Italian"
+#StringLanguages="sv_SE-Swedish tr_TR-Turkish no_NO-Norwegian da_DK-Danish hu_HU-Hungarian"
+StringLanguages="zh_CN-None, cs_CZ-None"
 opennlp="None"
 eval="false"
 blacklist="false"
@@ -92,8 +94,8 @@ for lang in $StringLanguages; do
     echo " Downloading the latest version of the following artifacts: * https://databus.dbpedia.org/dbpedia/generic/disambiguations * https://databus.dbpedia.org/dbpedia/generic/redirects * 
     https://databus.dbpedia.org/dbpedia/mappings/instance-types
 
-    Note of deviation from original index_db.sh: 
-    takes the direct AND transitive version of redirects and instance-types and the redirected version of disambiguation 
+    Note of deviation from original index_db.sh:
+    takes the direct AND transitive version of redirects and instance-types and the redirected version of disambiguation
     "
     cd $BASE_WDIR
 
@@ -105,13 +107,13 @@ for lang in $StringLanguages; do
     PREFIX dcat: <http://www.w3.org/ns/dcat#>
 
     SELECT  ?file WHERE {
-        { 
+        {
         # Subselect latestVersion by artifact
         SELECT  ?artifact (max(?version) as ?latestVersion)  WHERE {
                 ?dataset dataid:artifact ?artifact .
                 ?dataset dct:hasVersion ?version
                 FILTER (?artifact in (
-                # GENERIC 
+                # GENERIC
                     <https://databus.dbpedia.org/dbpedia/generic/disambiguations> ,
                     <https://databus.dbpedia.org/dbpedia/generic/redirects> ,
                     # MAPPINGS
@@ -120,21 +122,21 @@ for lang in $StringLanguages; do
                   # TODO not sure if needed for Spotlight
                     # <https://databus.dbpedia.org/denis/ontology/dbo-snapshots>
                  )) .
-                 }GROUP BY ?artifact 
-      } 
-          
+                 }GROUP BY ?artifact
+      }
+
         ?dataset dct:hasVersion ?latestVersion .
         {
               ?dataset dataid:artifact ?artifact .
               ?dataset dcat:distribution ?distribution .
               ?distribution dcat:downloadURL ?file .
               ?distribution dataid:contentVariant '$LANGUAGE'^^xsd:string .
-              # remove debug info 
+              # remove debug info
               MINUS {
-                   ?distribution dataid:contentVariant ?variants . 
+                   ?distribution dataid:contentVariant ?variants .
                    FILTER (?variants in ('disjointDomain'^^xsd:string, 'disjointRange'^^xsd:string))
-              }     
-        }   
+              }
+        }
     } ORDER by ?artifact
     "
 
@@ -143,25 +145,63 @@ for lang in $StringLanguages; do
 
     # Download
     TMPDOWN="dump-tmp-download"
-    mkdir $TMPDOWN 
+    mkdir $TMPDOWN
     cd $TMPDOWN
     for i in $RESULT
-      do  
-          wget $i 
+      do
+          wget $i
           ls
           echo $TMPDOWN
           pwd
       done
 
-    cd ..
-
     echo "decompressing"
-    bzcat -v $TMPDOWN/instance-types*.ttl.bz2 > $WDIR/instance_types.nt
-    bzcat -v $TMPDOWN/disambiguations*.ttl.bz2 > $WDIR/disambiguations.nt
-    bzcat -v $TMPDOWN/redirects*.ttl.bz2 > $WDIR/redirects.nt
+#    bzcat -v $TMPDOWN/instance-types*.ttl.bz2 > $WDIR/instance_types.nt
+#    bzcat -v $TMPDOWN/disambiguations*.ttl.bz2 > $WDIR/disambiguations.nt
+#    bzcat -v $TMPDOWN/redirects*.ttl.bz2 > $WDIR/redirects.nt
+    ALLFINE=true
+    MISSING_ARTIFACTS=""
+
+    for f in "instance-types"*; do
+      # [ -e "$f" ] && bzcat -v $TMPDOWN/instance-types*.ttl.bz2 > $WDIR/instance_types.nt || touch $WDIR/instance_types.nt
+       if [ -e "$f" ]; then
+            bzcat -v instance-types*.ttl.bz2 > $WDIR/instance_types.nt
+       else
+            ALLFINE=false
+            MISSING_ARTIFACTS="instance-types"
+       fi
+       break
+    done
+
+    for f in "disambiguations"*; do
+       if [ -e "$f" ]; then
+            bzcat -v disambiguations*.ttl.bz2 > $WDIR/disambiguations.nt
+       else
+            ALLFINE=false
+            MISSING_ARTIFACTS=$MISSING_ARTIFACTS" disambiguations"
+       fi
+       break
+   done
+
+    for f in "redirects"*; do
+       if [ -e "$f" ]; then
+            bzcat -v redirects*.ttl.bz2 > $WDIR/redirects.nt
+       else
+           ALLFINE=false
+           MISSING_ARTIFACTS=$MISSING_ARTIFACTS" redirects"
+       fi
+       break
+   done
 
     # clean
+    cd ..
     rm -r $TMPDOWN
+
+   if [ $ALLFINE ]; then
+        echo "Artifact(s) ("$MISSING_ARTIFACTS") missing, for more details about this please refer to https://forum.dbpedia.org/t/tasks-for-volunteers/163, task: 'Languages with missing redirects/disambiguations/instance-type'"
+        echo $lang >> missingArtifacts.txt
+        continue
+   fi
 
 ########################################################################################################
 # Setting up Spotlight:
@@ -180,7 +220,7 @@ for lang in $StringLanguages; do
         git clone --depth 1 https://github.com/dbpedia-spotlight/dbpedia-spotlight-model
         mv dbpedia-spotlight-model dbpedia-spotlight
         cd dbpedia-spotlight
-        #mvn -T 1C -q -Dhttps.protocols=TLSv1.2 install
+        mvn -T 1C -q -Dhttps.protocols=TLSv1.2 install
     fi
 
 
@@ -272,7 +312,9 @@ for lang in $StringLanguages; do
 done
 
 #Run the pom file to upload the models and wikistats to databus
-cd spotlight
-mvn deploy -X -e -T 10
+#cd spotlight
+
+#chown -R extractor:extractor /data/model-quickstarter-fork/
+#su - extractor -c 'cd /data/model-quickstarter-fork/spotlight && mvn validate && mvn deploy -X -e -T 10'
 
 set +e
