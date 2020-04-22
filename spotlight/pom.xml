@@ -22,7 +22,7 @@ This update generates and upload to dbpedia databus the artifacts of dbpedia-mod
 Contains some fixes from [Klaus82](https://github.com/dbpedia-spotlight/model-quickstarter/pull/20)
 The update is available in [Julio-Noe's Github repo](https://github.com/Julio-Noe/model-quickstarter) and will be merged soon into the spotlight repo.
 
-## wikistatextractor 
+## wikistatextractor (spotlight-wikistats)
 
 This tool now uses the [wikistatsextractor](https://github.com/dbpedia-spotlight/wikistatsextractor/) by the great folks over at [DiffBot](https://www.diffbot.com/). This means: no more Hadoop and Pig! Running the biggest model (English) takes around 2h on a single machine with around 32GB of RAM. We recommend running this script on an SSD with around 100GB of free space.
 
@@ -41,23 +41,9 @@ These files are now available to download in the Databus spotlight-wikistats rep
 - pairCount: Defines the number of times a surface form (plain text) was used to reference a resource (DBpedia URI)
 - sfAndTotalCount: Establish how many times a surface form was used as an anchor and how many times it occurred in text (regardless of wheter that was part of an anchor). 
 
-### model-quickstarter - Requirements
+### model-quickstarter (spotlight-model)
 
-- Git
-- Maven 3
-
-## Dbpedia-Databus generation
-
-You can use this tool to upload an artifact of dbpedia-models and wikistats for an specific languagee.
-
-* clone the repository
-* cd model-quickstarter/
-* ./prepare.sh
-* ./run_artifacts.sh
-
-```
-docker run -v /home/user/data/model/wdir:/model-quickstarter/wdir -v /home/user/data/model/data:/model-quickstarter/data -v /home/user/data/model/models:/model-quickstarter/models -it dbpediaspotlight/model-quickstarter bash
-```
+The dbpedia-models was generated with the [DBpedia model-quickstarter](https://github.com/dbpedia-spotlight/model-quickstarter) tool.
 
 ## Citation
 
