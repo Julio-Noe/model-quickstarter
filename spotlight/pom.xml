@@ -24,9 +24,7 @@ The update is available in [Julio-Noe's Github repo](https://github.com/Julio-No
 
 ## wikistatextractor (spotlight-wikistats)
 
-This tool now uses the [wikistatsextractor](https://github.com/dbpedia-spotlight/wikistatsextractor/) by the great folks over at [DiffBot](https://www.diffbot.com/). This means: no more Hadoop and Pig! Running the biggest model (English) takes around 2h on a single machine with around 32GB of RAM. We recommend running this script on an SSD with around 100GB of free space.
-
-The wikistatextractor tool extracts the same 4 files initially produced by pignlproc for dbpedia spotlight.
+The [wikistatsextractor](https://github.com/dbpedia-spotlight/wikistatsextractor/) extracts statistics statistics from Wikipedia Dump files. It extracts the same 4 files initially produced by pignlproc for dbpedia spotlight.
 
 File  | Long name  |  Line Format
 ------------- | ------------- | -------------
@@ -43,7 +41,7 @@ These files are now available to download in the Databus spotlight-wikistats rep
 
 ### model-quickstarter (spotlight-model)
 
-The dbpedia-models was generated with the [DBpedia model-quickstarter](https://github.com/dbpedia-spotlight/model-quickstarter) tool.
+The dbpedia-models was generated with the [DBpedia model-quickstarter](https://github.com/dbpedia-spotlight/model-quickstarter) tool. 
 
 ## Citation
 
