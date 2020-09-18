@@ -9,7 +9,8 @@ export MAVEN_OPTS="-Xmx26G"
 
 #StringLanguages="en_US-English de_DE-German nl_NL-Dutch sv_SE-Swedish pt_BR-Portuguese fr_FR-French es_ES-Spanish tr_TR-Turkish no_NO-Norwegian it_IT-Italian da_DK-Danish ja_JP-None cs_CZ-None hu_HU-Hungarian ru_RU-Russian zh_CN-None"
 #StringLanguages="sv_SE-Swedish tr_TR-Turkish no_NO-Norwegian da_DK-Danish hu_HU-Hungarian"
-StringLanguages="zh_CN-None, cs_CZ-None"
+#StringLanguages="zh_CN-None, cs_CZ-None"
+StringLanguages="es_ES-Spanish"
 opennlp="None"
 eval="false"
 blacklist="false"
@@ -195,9 +196,9 @@ for lang in $StringLanguages; do
 
     # clean
     cd ..
-    rm -r $TMPDOWN
+#    rm -r $TMPDOWN
 
-   if [ $ALLFINE ]; then
+   if [ ! $ALLFINE ]; then
         echo "##########################################################################################################"
         echo "######Artifact(s) ("$MISSING_ARTIFACTS") missing, for more details about this please refer to https://forum.dbpedia.org/t/tasks-for-volunteers/163, task: 'Languages with missing redirects/disambiguations/instance-type'"
         echo "##########################################################################################################"
@@ -232,8 +233,8 @@ for lang in $StringLanguages; do
 
     cd $BASE_WDIR
     rm -Rf wikistatsextractor
-    git clone --depth 1 https://github.com/dbpedia-spotlight/wikistatsextractor
-
+#    git clone --depth 1 https://github.com/dbpedia-spotlight/wikistatsextractor
+    git clone --depth 1 https://github.com/Julio-Noe/wikistatsextractor
     # Stop processing if one step fails
     set -e
 
