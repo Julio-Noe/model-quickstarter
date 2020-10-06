@@ -1,4 +1,3 @@
-
 #!/bin/bash
 #+------------------------------------------------------------------------------------------------------------------------------+
 #| DBpedia Spotlight - Create database-backed model                                                                             |
@@ -16,22 +15,20 @@ eval="false"
 blacklist="false"
 
 BASE_DIR=$(pwd)
-#cd $BASE_DIR && cd ..
-#BASE_DIR=$(pwd)
 
-BASE_WDIR=$BASE_DIR/wdir
-BASE_ARTIFACTDIR=$BASE_DIR/spotlight
+BASE_WDIR="$BASE_DIR/wdir"
+BASE_ARTIFACTDIR="$BASE_DIR/spotlight"
 
 #Iteration
 for lang in $StringLanguages; do
      echo $lang
-     LANGUAGE=`echo $lang | sed "s/_.*//g"`
-     STEMMER=`echo $lang | sed "s/.*-//g"`
+     LANGUAGE=$(echo "$lang" | sed "s/_.*//g")
+     STEMMER=$(echo "$lang" | sed "s/.*-//g")
     if [[ "$STEMMER" != "None" ]]; then
         STEMMER="$STEMMER""Stemmer"
     fi
 
-      LOCALE=`echo $lang | sed "s/-.*//g"`
+    LOCALE=$(echo "$lang" | sed "s/-.*//g")
     echo "Language: $LANGUAGE"
     echo "Stemmer: $STEMMER"
     echo "Locale: $LOCALE"
@@ -51,7 +48,7 @@ for lang in $StringLanguages; do
          blacklist="None"
     fi
 
-    mkdir -p $WDIR
+    mkdir -p "$WDIR"
 
 ########################################################################################################
 # Preparing the data.
@@ -63,23 +60,23 @@ for lang in $StringLanguages; do
     fi
 
     WP_DOWNLOAD_FILE=$WDIR/dump.xml.bz2
-    echo Checking for wikipedia dump at $WP_DOWNLOAD_FILE
+    echo Checking for wikipedia dump at "$WP_DOWNLOAD_FILE"
     if [ -f "$WP_DOWNLOAD_FILE" ]; then
       echo File exists.
     else
       echo Downloading wikipedia dump.
       if [[ "$eval" == "false" ]] 
       then
-	cd $WDIR
+	cd "$WDIR"
         curl -O "$WIKI_MIRROR/${LANGUAGE}wiki/latest/${LANGUAGE}wiki-latest-pages-articles.xml.bz2" 
-	mv ${LANGUAGE}wiki-latest-pages-articles.xml.bz2 dump.xml.bz2
+	mv "${LANGUAGE}"wiki-latest-pages-articles.xml.bz2 dump.xml.bz2
       else
-        curl -# "$WIKI_MIRROR/${LANGUAGE}wiki/latest/${LANGUAGE}wiki-latest-pages-articles.xml.bz2" | bzcat | python $BASE_DIR/scripts/split_train_test.py 1200 $WDIR/heldout.txt > $WDIR/dump.xml
+        curl -# "$WIKI_MIRROR/${LANGUAGE}wiki/latest/${LANGUAGE}wiki-latest-pages-articles.xml.bz2" | bzcat | python "$BASE_DIR"/scripts/split_train_test.py 1200 "$WDIR"/heldout.txt > "$WDIR"/dump.xml
       fi
     fi
 
-    cd $WDIR
-    cp $STOPWORDS stopwords.$LANGUAGE.list
+    cd "$WDIR"
+    cp "$STOPWORDS" stopwords."$LANGUAGE".list
 
     touch "$LANGUAGE.tokenizer_model"
 
@@ -102,7 +99,7 @@ for lang in $StringLanguages; do
     Note of deviation from original index_db.sh:
     takes the direct AND transitive version of redirects and instance-types and the redirected version of disambiguation
     "
-    cd $BASE_WDIR
+    cd "$BASE_WDIR"
     echo "BASE_WDIR = $BASE_WDIR"
     QUERY="PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX dc: <http://purl.org/dc/elements/1.1/>
@@ -156,7 +153,7 @@ for lang in $StringLanguages; do
     echo "PWD = $(pwd)"
     for i in $RESULT
       do
-          wget $i
+          wget "$i"
           ls
           echo $TMPDOWN
           pwd
@@ -171,11 +168,11 @@ for lang in $StringLanguages; do
        if [[ -e "$f" ]]
        then
 	    echo "instance-types exists"   
-            bzcat -v instance-types*.ttl.bz2 > $WDIR/instance_types.nt
+            bzcat -v instance-types*.ttl.bz2 > "$WDIR"/instance_types.nt
        else
             ALLFINE=false
             MISSING_ARTIFACTS="instance-types"
-	    touch $WDIR/instance_types.nt
+	    touch "$WDIR"/instance_types.nt
        fi
        break
     done
@@ -184,11 +181,11 @@ for lang in $StringLanguages; do
        if [[ -e "$f" ]]
        then
 	    echo "disambiguations exists"   
-            bzcat -v disambiguations*.ttl.bz2 > $WDIR/disambiguations.nt
+            bzcat -v disambiguations*.ttl.bz2 > "$WDIR"/disambiguations.nt
        else
             ALLFINE=false
             MISSING_ARTIFACTS=$MISSING_ARTIFACTS" disambiguations"
-	    touch $WDIR/disambiguations.nt
+	    touch "$WDIR"/disambiguations.nt
        fi
        break
    done
@@ -197,11 +194,11 @@ for lang in $StringLanguages; do
        if [[ -e "$f" ]]
        then
 	    echo "redirects exists"   
-            bzcat -v redirects*.ttl.bz2 > $WDIR/redirects.nt
+            bzcat -v redirects*.ttl.bz2 > "$WDIR"/redirects.nt
        else
            ALLFINE=false
            MISSING_ARTIFACTS=$MISSING_ARTIFACTS" redirects"
-	   touch $WDIR/redirects.nt
+	   touch "$WDIR"/redirects.nt
        fi
        break
    done
@@ -213,16 +210,16 @@ for lang in $StringLanguages; do
    if [[ $ALLFINE = false ]] 
    then
         echo "##########################################################################################################"
-        echo "######Artifact(s) ("$MISSING_ARTIFACTS") missing, for more details about this please refer to https://forum.dbpedia.org/t/tasks-for-volunteers/163, task: 'Languages with missing redirects/disambiguations/instance-type'"
+        echo "######Artifact(s) (""$MISSING_ARTIFACTS"") missing, for more details about this please refer to https://forum.dbpedia.org/t/tasks-for-volunteers/163, task: 'Languages with missing redirects/disambiguations/instance-type'"
         echo "##########################################################################################################"
-        echo $LOCALE >> $BASE_DIR/missingArtifacts.txt
+        echo "$LOCALE" >> "$BASE_DIR"/missingArtifacts.txt
         #continue
    fi
 ########################################################################################################
 # Extracting wiki stats:
 ########################################################################################################
 
-    cd $BASE_WDIR
+    cd "$BASE_WDIR"
     rm -Rf wikistatsextractor
 #    git clone --depth 1 https://github.com/dbpedia-spotlight/wikistatsextractor
     git clone --depth 1 https://github.com/Julio-Noe/wikistatsextractor
@@ -231,7 +228,7 @@ for lang in $StringLanguages; do
     set -e
 
     #Copy results to local:
-    cd $BASE_WDIR/wikistatsextractor
+    cd "$BASE_WDIR"/wikistatsextractor
 
     echo "MVN ARGUMENTS --output_folder $WDIR $LANGUAGE $3 $5Stemmer $WDIR/dump.xml $WDIR/stopwords.$LANGUAGE.list"
 
@@ -240,7 +237,7 @@ for lang in $StringLanguages; do
     if [ "$blacklist" != "None" ]; then
       echo "Removing blacklist URLs..."
       mv $WDIR/uriCounts $WDIR/uriCounts_all
-      grep -v -f $blacklist $WDIR/uriCounts_all > $WDIR/uriCounts
+      grep -v -f "$blacklist $WDIR/uriCounts_all" > "$WDIR/uriCounts"
     fi
 
     echo "Finished wikistats extraction. Cleaning up..."
@@ -250,7 +247,7 @@ for lang in $StringLanguages; do
 # Setting up Spotlight:
 ########################################################################################################
 
-    cd $BASE_WDIR
+    cd "$BASE_WDIR"
 
     if [ -d dbpedia-spotlight ]; then
         echo "Updating DBpedia Spotlight..."
@@ -271,14 +268,14 @@ for lang in $StringLanguages; do
 ########################################################################################################
 
     #Create the model:
-    cd $BASE_WDIR/dbpedia-spotlight
+    cd "$BASE_WDIR/dbpedia-spotlight"
 
     #mvn -Dhttps.protocols=TLSv1.2 install
 
     mvn -pl index exec:java -Dexec.cleanupDaemonThreads=false -Dexec.mainClass=org.dbpedia.spotlight.db.CreateSpotlightModel -Dexec.args="$LOCALE $WDIR $TARGET_DIR $opennlp $STOPWORDS $STEMMER" -X -e
 
     if [ "$eval" == "true" ]; then
-      mvn -pl eval exec:java -Dexec.mainClass=org.dbpedia.spotlight.evaluation.EvaluateSpotlightModel -Dexec.args="$TARGET_DIR $WDIR/heldout.txt" > $TARGET_DIR/evaluation.txt
+      mvn -pl eval exec:java -Dexec.mainClass=org.dbpedia.spotlight.evaluation.EvaluateSpotlightModel -Dexec.args="$TARGET_DIR $WDIR/heldout.txt" > "$TARGET_DIR/evaluation.txt"
     fi
 
 #    curl https://raw.githubusercontent.com/dbpedia-spotlight/model-quickstarter/master/model_readme.txt > $TARGET_DIR/README.txt
@@ -307,12 +304,12 @@ for lang in $StringLanguages; do
              cd "$BASE_DIR/models"
      fi
      #Creating the symbolic link
-     mkdir -p $BASE_ARTIFACTDIR/$MODEL_DIR/$ARTIFACT_VERSION/
+     mkdir -p "$BASE_ARTIFACTDIR/$MODEL_DIR/$ARTIFACT_VERSION/"
      ln -s "$(pwd)/spotlight-model_lang=$LANGUAGE.tar.gz" "$BASE_ARTIFACTDIR/$MODEL_DIR/$ARTIFACT_VERSION/spotlight-model_lang=$LANGUAGE.tar.gz"
      echo "Sybolic link created for language $LANGUAGE"
 
      #compressing wikistats files
-     cd $WDIR
+     cd "$WDIR"
      bzip2 -zk *Counts && echo "bzip finished"
       #rename "s/^/spotlight-wikistats_type=/" *Counts.bz2 && rename "s/Counts.bz2/Counts_lang=$LANGUAGE.tsv.bz2/" * && mv *tsv.bz2 $BASE_ARTIFACTDIR/$WIKISTAT_DIR/$ARTIFACT_VERSION/
       rename "s/^/spotlight-wikistats_type=/" *Counts.bz2 && rename "s/Counts.bz2/Counts_lang=$LANGUAGE.tsv.bz2/" * && echo "process finished" 
@@ -324,8 +321,8 @@ for lang in $StringLanguages; do
 ########################################################################################################
 
       #echo "Collecting data..."
-      cd $BASE_DIR
-      mkdir -p data/$LANGUAGE && mv $WDIR/*tsv.bz2 data/$LANGUAGE
+      cd "$BASE_DIR"
+      mkdir -p "data/$LANGUAGE" && mv "$WDIR"/*tsv.bz2 data/"$LANGUAGE"
       if [[ ! -d "$BASE_ARTIFACTDIR/$WIKISTAT_DIR/$ARTIFACT_VERSION" ]]
       then
 	      mkdir -p "$BASE_ARTIFACTDIR/$WIKISTAT_DIR/$ARTIFACT_VERSION"
