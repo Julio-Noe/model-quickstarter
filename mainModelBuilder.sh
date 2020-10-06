@@ -1,3 +1,4 @@
+
 #!/bin/bash
 #+------------------------------------------------------------------------------------------------------------------------------+
 #| DBpedia Spotlight - Create database-backed model                                                                             |
@@ -8,10 +9,6 @@ export LC_ALL=en_US.UTF-8
 export MAVEN_OPTS="-Xmx26G"
 
 #StringLanguages="en_US-English de_DE-German nl_NL-Dutch sv_SE-Swedish pt_BR-Portuguese fr_FR-French es_ES-Spanish tr_TR-Turkish no_NO-Norwegian it_IT-Italian da_DK-Danish ja_JP-None cs_CZ-None hu_HU-Hungarian ru_RU-Russian zh_CN-None"
-#StringLanguages="sv_SE-Swedish tr_TR-Turkish no_NO-Norwegian da_DK-Danish hu_HU-Hungarian"
-#StringLanguages="en_US-English de_DE-German nl_NL-Dutch sv_SE-Swedish pt_BR-Portuguese fr_FR-French es_ES-Spanish tr_TR-Turkish no_NO-Norwegian it_IT-Italian da_DK-Danish ja_JP-None cs_CZ-None hu_HU-Hungarian ru_RU-Russian zh_CN-None"
-#StringLanguages="tr_TR-Turkish hu_HU-Hungarian sv_SE-Swedish no_NO-Norwegian"
-#StringLanguages="en_US-English de_DE-German fr_FR-French"
 StringLanguages="zh_CN-None"
 
 opennlp="None"
@@ -47,7 +44,8 @@ for lang in $StringLanguages; do
 
     STOPWORDS="$BASE_DIR/$LANGUAGE/stopwords.list"
 
-    if [[ -f "$LANGUAGE/ignore.list" ]]; then
+    if [[ -f "$LANGUAGE/ignore.list" ]]
+    then
          blacklist="$BASE_DIR/$LANGUAGE/ignore.list"
     else
          blacklist="None"
@@ -70,7 +68,8 @@ for lang in $StringLanguages; do
       echo File exists.
     else
       echo Downloading wikipedia dump.
-      if [ "$eval" == "false" ]; then
+      if [[ "$eval" == "false" ]] 
+      then
 	cd $WDIR
         curl -O "$WIKI_MIRROR/${LANGUAGE}wiki/latest/${LANGUAGE}wiki-latest-pages-articles.xml.bz2" 
 	mv ${LANGUAGE}wiki-latest-pages-articles.xml.bz2 dump.xml.bz2
@@ -169,7 +168,8 @@ for lang in $StringLanguages; do
 
     for f in "instance-types"*; do
       # [ -e "$f" ] && bzcat -v $TMPDOWN/instance-types*.ttl.bz2 > $WDIR/instance_types.nt || touch $WDIR/instance_types.nt
-       if [ -e "$f" ]; then
+       if [[ -e "$f" ]]
+       then
 	    echo "instance-types exists"   
             bzcat -v instance-types*.ttl.bz2 > $WDIR/instance_types.nt
        else
@@ -181,7 +181,8 @@ for lang in $StringLanguages; do
     done
 
     for f in "disambiguations"*; do
-       if [ -e "$f" ]; then
+       if [[ -e "$f" ]]
+       then
 	    echo "disambiguations exists"   
             bzcat -v disambiguations*.ttl.bz2 > $WDIR/disambiguations.nt
        else
@@ -193,7 +194,8 @@ for lang in $StringLanguages; do
    done
 
     for f in "redirects"*; do
-       if [ -e "$f" ]; then
+       if [[ -e "$f" ]]
+       then
 	    echo "redirects exists"   
             bzcat -v redirects*.ttl.bz2 > $WDIR/redirects.nt
        else
@@ -243,6 +245,97 @@ for lang in $StringLanguages; do
 
     echo "Finished wikistats extraction. Cleaning up..."
 #    rm -f $WDIR/dump.xml
+
+########################################################################################################
+# Setting up Spotlight:
+########################################################################################################
+
+    cd $BASE_WDIR
+
+    if [ -d dbpedia-spotlight ]; then
+        echo "Updating DBpedia Spotlight..."
+        cd dbpedia-spotlight
+        git reset --hard HEAD
+        git pull
+        mvn -T 1C -q -Dhttps.protocols=TLSv1.2 clean install
+    else
+        echo "Setting up DBpedia Spotlight..."
+        git clone -b multilingual --depth 1 https://github.com/Julio-Noe/dbpedia-spotlight-model
+        mv dbpedia-spotlight-model dbpedia-spotlight
+        cd dbpedia-spotlight
+        mvn -T 1C -q -Dhttps.protocols=TLSv1.2 install
+    fi
+
+########################################################################################################
+# Building Spotlight model:
+########################################################################################################
+
+    #Create the model:
+    cd $BASE_WDIR/dbpedia-spotlight
+
+    #mvn -Dhttps.protocols=TLSv1.2 install
+
+    mvn -pl index exec:java -Dexec.cleanupDaemonThreads=false -Dexec.mainClass=org.dbpedia.spotlight.db.CreateSpotlightModel -Dexec.args="$LOCALE $WDIR $TARGET_DIR $opennlp $STOPWORDS $STEMMER" -X -e
+
+    if [ "$eval" == "true" ]; then
+      mvn -pl eval exec:java -Dexec.mainClass=org.dbpedia.spotlight.evaluation.EvaluateSpotlightModel -Dexec.args="$TARGET_DIR $WDIR/heldout.txt" > $TARGET_DIR/evaluation.txt
+    fi
+
+#    curl https://raw.githubusercontent.com/dbpedia-spotlight/model-quickstarter/master/model_readme.txt > $TARGET_DIR/README.txt
+#    curl "$WIKI_MIRROR/${LANGUAGE}wiki/latest/${LANGUAGE}wiki-latest-pages-articles.xml.bz2-rss.xml" | grep link | sed -e 's/^.*<link>//' -e 's/<[/]link>.*$//' | uniq >> $TARGET_DIR/README.txt
+
+########################################################################################################
+# Generating artifacts
+########################################################################################################
+
+ set -e
+
+     MODEL_DIR="spotlight-model"
+     WIKISTAT_DIR="spotlight-wikistats"
+     #DERIVE_DATE=$(date +%F | sed 's/-/\./g')
+     DERIVE_DATE="2020.09.17"
+
+     #compressing model files
+     cd "$BASE_DIR/models"
+     echo $(pwd)
+     if [[ ! -f "spotlight-model_lang=$LANGUAGE.tar.gz" ]]; then
+        #cd $TARGET_DIR/..
+        echo $(pwd)
+        echo tar -cvzf $BASE_ARTIFACTDIR/$MODEL_DIR/$ARTIFACT_VERSION/spotlight-model_lang\=$LANGUAGE.tar.gz "$LANGUAGE" && echo "$LANGUAGE"
+             tar -cvzf spotlight-model_lang\=$LANGUAGE.tar.gz "$LANGUAGE" && rm -r $LANGUAGE
+     else
+             cd "$BASE_DIR/models"
+     fi
+     #Creating the symbolic link
+     mkdir -p $BASE_ARTIFACTDIR/$MODEL_DIR/$ARTIFACT_VERSION/
+     ln -s "$(pwd)/spotlight-model_lang=$LANGUAGE.tar.gz" "$BASE_ARTIFACTDIR/$MODEL_DIR/$ARTIFACT_VERSION/spotlight-model_lang=$LANGUAGE.tar.gz"
+     echo "Sybolic link created for language $LANGUAGE"
+
+     #compressing wikistats files
+     cd $WDIR
+     bzip2 -zk *Counts && echo "bzip finished"
+      #rename "s/^/spotlight-wikistats_type=/" *Counts.bz2 && rename "s/Counts.bz2/Counts_lang=$LANGUAGE.tsv.bz2/" * && mv *tsv.bz2 $BASE_ARTIFACTDIR/$WIKISTAT_DIR/$ARTIFACT_VERSION/
+      rename "s/^/spotlight-wikistats_type=/" *Counts.bz2 && rename "s/Counts.bz2/Counts_lang=$LANGUAGE.tsv.bz2/" * && echo "process finished" 
+
+      #find . -name "*Counts.tsv" | tar -cvzf $ARTIFACT_DIR/$WIKISTAT_DIR/$DERIVE_DATE/spotlight-wikistat_lang\=$LANGUAGE.tar.gz --files-from - && echo "wikistats are done"
+
+########################################################################################################
+# Moving files
+########################################################################################################
+
+      #echo "Collecting data..."
+      cd $BASE_DIR
+      mkdir -p data/$LANGUAGE && mv $WDIR/*tsv.bz2 data/$LANGUAGE
+      if [[ ! -d "$BASE_ARTIFACTDIR/$WIKISTAT_DIR/$ARTIFACT_VERSION" ]]
+      then
+	      mkdir -p "$BASE_ARTIFACTDIR/$WIKISTAT_DIR/$ARTIFACT_VERSION"
+      fi
+      for FILE in $(ls data/$LANGUAGE/); do
+	      echo ln -s "$FILE" "$BASE_ARTIFACTDIR/$WIKISTAT_DIR/$ARTIFACT_VERSION/$FILE"
+	      ln -s "$BASE_DIR/data/$LANGUAGE/$FILE" "$BASE_ARTIFACTDIR/$WIKISTAT_DIR/$ARTIFACT_VERSION/$FILE"
+      done
+      #gzip $WDIR/*.nt &
+      #rm -r $WDIR
 
 done
 echo "#####ALL LANGUAGES DONE######"
