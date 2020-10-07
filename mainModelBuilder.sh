@@ -8,20 +8,21 @@ export LC_ALL=en_US.UTF-8
 export MAVEN_OPTS="-Xmx26G"
 
 #StringLanguages="en_US-English de_DE-German nl_NL-Dutch sv_SE-Swedish pt_BR-Portuguese fr_FR-French es_ES-Spanish tr_TR-Turkish no_NO-Norwegian it_IT-Italian da_DK-Danish ja_JP-None cs_CZ-None hu_HU-Hungarian ru_RU-Russian zh_CN-None"
-StringLanguages="zh_CN-None"
+StringLanguages="en_US-English de_DE-German fr_FR-French"
 
 opennlp="None"
 eval="false"
 blacklist="false"
 
-BASE_DIR=$(pwd)
+#BASE_DIR=$(pwd)
+BASE_DIR="/data/model-quickstarter-fork"
 
 BASE_WDIR="$BASE_DIR/wdir"
 BASE_ARTIFACTDIR="$BASE_DIR/spotlight"
 
 #Iteration
 for lang in $StringLanguages; do
-     echo $lang
+     echo $lang >> /data/model-quickstarter-fork/debug.txt
      LANGUAGE=$(echo "$lang" | sed "s/_.*//g")
      STEMMER=$(echo "$lang" | sed "s/.*-//g")
     if [[ "$STEMMER" != "None" ]]; then
@@ -29,15 +30,16 @@ for lang in $StringLanguages; do
     fi
 
     LOCALE=$(echo "$lang" | sed "s/-.*//g")
-    echo "Language: $LANGUAGE"
-    echo "Stemmer: $STEMMER"
-    echo "Locale: $LOCALE"
+    echo "Language: $LANGUAGE">> /data/model-quickstarter-fork/debug.txt
+    echo "Stemmer: $STEMMER">> /data/model-quickstarter-fork/debug.txt
+    echo "Locale: $LOCALE">> /data/model-quickstarter-fork/debug.txt
 
     TARGET_DIR="$BASE_DIR/models/$LANGUAGE"
     WDIR="$BASE_WDIR/$LOCALE"
-    ARTIFACT_VERSION="2020.03.11"
-
-    echo "Working directory: $WDIR"
+#    ARTIFACT_VERSION="2020.09.17"
+    ARTIFACT_VERSION=$(date +%Y.%m.%d)
+    echo ARTIFACT = "$ARTIFACT_VERSION">> /data/model-quickstarter-fork/debug.txt
+    echo "Working directory: $WDIR">> /data/model-quickstarter-fork/debug.txt
 
     STOPWORDS="$BASE_DIR/$LANGUAGE/stopwords.list"
 
@@ -49,12 +51,14 @@ for lang in $StringLanguages; do
     fi
 
     mkdir -p "$WDIR"
+    echo "======================================================================">> /data/model-quickstarter-fork/debug.txt
 
 ########################################################################################################
 # Preparing the data.
 ########################################################################################################
 
-    echo "Loading Wikipedia dump..."
+    echo "Loading Wikipedia dump..." >> /data/model-quickstarter-fork/debug.txt
+    date -u >> /data/model-quickstarter-fork/debug.txt
     if [ -z "$WIKI_MIRROR" ]; then
       WIKI_MIRROR="https://dumps.wikimedia.org/"
     fi
@@ -98,7 +102,8 @@ for lang in $StringLanguages; do
 
     Note of deviation from original index_db.sh:
     takes the direct AND transitive version of redirects and instance-types and the redirected version of disambiguation
-    "
+    " >> /data/model-quickstarter-fork/debug.txt
+    date -u >> /data/model-quickstarter-fork/debug.txt
     cd "$BASE_WDIR"
     echo "BASE_WDIR = $BASE_WDIR"
     QUERY="PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -219,6 +224,8 @@ for lang in $StringLanguages; do
 # Extracting wiki stats:
 ########################################################################################################
 
+    echo "Extracting wiki stats" >> /data/model-quickstarter-fork/debug.txt
+    date -u >> /data/model-quickstarter-fork/debug.txt
     cd "$BASE_WDIR"
     rm -Rf wikistatsextractor
 #    git clone --depth 1 https://github.com/dbpedia-spotlight/wikistatsextractor
@@ -247,6 +254,8 @@ for lang in $StringLanguages; do
 # Setting up Spotlight:
 ########################################################################################################
 
+    echo "Setting up Spotlight" >> /data/model-quickstarter-fork/debug.txt
+    date -u >> /data/model-quickstarter-fork/debug.txt
     cd "$BASE_WDIR"
 
     if [ -d dbpedia-spotlight ]; then
@@ -267,6 +276,8 @@ for lang in $StringLanguages; do
 # Building Spotlight model:
 ########################################################################################################
 
+    echo "Building spotlight model" >> /data/model-quickstarter-fork/debug.txt
+    date -u >> /data/model-quickstarter-fork/debug.txt
     #Create the model:
     cd "$BASE_WDIR/dbpedia-spotlight"
 
@@ -285,12 +296,15 @@ for lang in $StringLanguages; do
 # Generating artifacts
 ########################################################################################################
 
+     echo "Generating artifacts" >> /data/model-quickstarter-fork/debug.txt
+     date -u >> /data/model-quickstarter-fork/debug.txt
  set -e
 
      MODEL_DIR="spotlight-model"
      WIKISTAT_DIR="spotlight-wikistats"
      #DERIVE_DATE=$(date +%F | sed 's/-/\./g')
-     DERIVE_DATE="2020.09.17"
+     #DERIVE_DATE="2020.09.17"
+     DERIVE_DATE=$ARTIFACT_VERSION
 
      #compressing model files
      cd "$BASE_DIR/models"
@@ -320,7 +334,10 @@ for lang in $StringLanguages; do
 # Moving files
 ########################################################################################################
 
-      #echo "Collecting data..."
+      echo "Moving files" >> /data/model-quickstarter-fork/debug.txt
+      date -u >> /data/model-quickstarter-fork/debug.txt
+
+ 
       cd "$BASE_DIR"
       mkdir -p "data/$LANGUAGE" && mv "$WDIR"/*tsv.bz2 data/"$LANGUAGE"
       if [[ ! -d "$BASE_ARTIFACTDIR/$WIKISTAT_DIR/$ARTIFACT_VERSION" ]]
@@ -335,5 +352,26 @@ for lang in $StringLanguages; do
       #rm -r $WDIR
 
 done
-echo "#####ALL LANGUAGES DONE######"
+###############################################################################################################
+# Copy POM files
+###############################################################################################################
+
+echo "Copying pom files" >> /data/model-quickstarter-fork/debug.txt
+date -u >> /data/model-quickstarter-fork/debug.txt
+
+cd "$BASE_DIR"
+sed "s/POMVERSION/$DERIVE_DATE/g" pomTemplates/masterPom.xml > spotlight/pom.xml
+sed "s/POMVERSION/$DERIVE_DATE/g" pomTemplates/masterPom.xml > spotlight-models/pom.xml
+sed "s/POMVERSION/$DERIVE_DATE/g" pomTemplates/masterPom.xml > spotlight-wikistats/pom.xml
+
+echo "#####ALL LANGUAGES DONE######" >> /data/model-quickstarter-fork/debug.txt 
+
+
+rm -r $WDIR
+
+
+chown -R extractor:extractor /data/model-quickstarter-fork/
+#su - extractor -c 'cd /data/model-quickstarter-fork/spotlight/spotlight-wikistats && mvn validate && mvn -Pwebdav deploy -X -e -T 20'
+su - extractor -c 'cd /data/model-quickstarter-fork/spotlight && mvn validate && mvn install'
+
 set +e

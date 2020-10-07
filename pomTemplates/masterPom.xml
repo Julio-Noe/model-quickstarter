@@ -9,7 +9,7 @@
   </parent>
   <groupId>spotlight</groupId>
   <artifactId>group-metadata</artifactId>
-  <version>2020.10.07</version>
+  <version>POMVERSION</version>
   <packaging>pom</packaging>
   <modules>
     <module>spotlight-wikistats</module>

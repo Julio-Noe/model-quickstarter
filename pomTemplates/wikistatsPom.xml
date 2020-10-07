@@ -9,7 +9,7 @@
     </parent>
     <groupId>spotlight</groupId>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>spotlight-model</artifactId>
+    <artifactId>spotlight-wikistats</artifactId>
     <packaging>jar</packaging>
 
 </project>
