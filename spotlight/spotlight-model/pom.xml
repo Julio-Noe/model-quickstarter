@@ -5,7 +5,7 @@
     <parent>
         <artifactId>group-metadata</artifactId>
         <groupId>spotlight</groupId>
-        <version>POMVERSION</version>
+        <version>2020.10.13</version>
     </parent>
     <groupId>spotlight</groupId>
     <modelVersion>4.0.0</modelVersion>

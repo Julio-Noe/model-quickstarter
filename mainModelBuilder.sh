@@ -20,6 +20,7 @@ BASE_DIR="/data/model-quickstarter-fork"
 BASE_WDIR="$BASE_DIR/wdir"
 BASE_ARTIFACTDIR="$BASE_DIR/spotlight"
 
+ARTIFACT_VERSION=$(date +%Y.%m.%d)
 #Iteration
 for lang in $StringLanguages; do
      echo $lang >> /data/model-quickstarter-fork/debug.txt
@@ -36,8 +37,6 @@ for lang in $StringLanguages; do
 
     TARGET_DIR="$BASE_DIR/models/$LANGUAGE"
     WDIR="$BASE_WDIR/$LOCALE"
-#    ARTIFACT_VERSION="2020.09.17"
-    ARTIFACT_VERSION=$(date +%Y.%m.%d)
     echo ARTIFACT = "$ARTIFACT_VERSION">> /data/model-quickstarter-fork/debug.txt
     echo "Working directory: $WDIR">> /data/model-quickstarter-fork/debug.txt
 
@@ -244,7 +243,7 @@ for lang in $StringLanguages; do
     if [ "$blacklist" != "None" ]; then
       echo "Removing blacklist URLs..."
       mv $WDIR/uriCounts $WDIR/uriCounts_all
-      grep -v -f "$blacklist $WDIR/uriCounts_all" > "$WDIR/uriCounts"
+      grep -v -f "$blacklist" "$WDIR"/uriCounts_all > "$WDIR/uriCounts"
     fi
 
     echo "Finished wikistats extraction. Cleaning up..."
@@ -314,7 +313,6 @@ for lang in $StringLanguages; do
         echo $(pwd)
         echo tar -cvzf $BASE_ARTIFACTDIR/$MODEL_DIR/$ARTIFACT_VERSION/spotlight-model_lang\=$LANGUAGE.tar.gz "$LANGUAGE" && echo "$LANGUAGE"
              tar -cvzf spotlight-model_lang\=$LANGUAGE.tar.gz "$LANGUAGE" && rm -r $LANGUAGE
-     else
              cd "$BASE_DIR/models"
      fi
      #Creating the symbolic link
@@ -361,8 +359,8 @@ date -u >> /data/model-quickstarter-fork/debug.txt
 
 cd "$BASE_DIR"
 sed "s/POMVERSION/$DERIVE_DATE/g" pomTemplates/masterPom.xml > spotlight/pom.xml
-sed "s/POMVERSION/$DERIVE_DATE/g" pomTemplates/masterPom.xml > spotlight-models/pom.xml
-sed "s/POMVERSION/$DERIVE_DATE/g" pomTemplates/masterPom.xml > spotlight-wikistats/pom.xml
+sed "s/POMVERSION/$DERIVE_DATE/g" pomTemplates/modelPom.xml > spotlight/spotlight-model/pom.xml
+sed "s/POMVERSION/$DERIVE_DATE/g" pomTemplates/wikistatsPom.xml > spotlight/spotlight-wikistats/pom.xml
 
 echo "#####ALL LANGUAGES DONE######" >> /data/model-quickstarter-fork/debug.txt 
 
