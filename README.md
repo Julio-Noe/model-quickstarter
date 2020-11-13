@@ -18,7 +18,11 @@ This tool now uses the wikistatsextractor by the great folks over at [DiffBot](h
 
 ## Spotlight model creation
 
-In the command line run `./mainModelBuilder.sh`. It will generate the model for the English language. If you want to create a model for any other language, update the variable `StringLanguages`.
+In the command line run the following command:
+
+```./mainModelBuilder.sh LANG_LOC-Stemmer ```
+
+where LANG is the two digits language code, LOC is the two digits locator code, and Stemmer is the Snowball stemmer algorithm. The language and locator codes correspondes to the [BCP47](https://tools.ietf.org/html/bcp47) documentation. If the stemmer algorithm is not available the _None_ string must be used, e.g., ja_JP-None for the Japanese language. 
 
 ## Datasets
 
