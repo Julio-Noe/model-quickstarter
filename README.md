@@ -5,7 +5,7 @@ Quickstarter for DBpedia Spotlight models
 
 ## Update, February 2020
 
-The [redirects](https://databus.dbpedia.org/dbpedia/generic/redirects/), [disambiguations](https://databus.dbpedia.org/dbpedia/generic/disambiguations/), and [instance-types](https://databus.dbpedia.org/dbpedia/mappings/instance-types/) are downloaded from DBpedia Databus.
+The DBpedia-Spotlight server downloads the most recent language models from the [DBpedia Databus](https://databus.dbpedia.org/dbpedia/spotlight/spotlight-model/). The language models are build with the latest version of [redirects](https://databus.dbpedia.org/dbpedia/generic/redirects/), [disambiguations](https://databus.dbpedia.org/dbpedia/generic/disambiguations/), and [instance-types](https://databus.dbpedia.org/dbpedia/mappings/instance-types/) artifacts, downloaded from the DBpedia Databus. 
 
 ## Update, January 2016
 
@@ -26,7 +26,11 @@ where LANG is the two digits language code, LOC is the two digits locator code, 
 
 ## Datasets
 
-You can find pre-built datasets created using the model-quickstarter [here](https://databus.dbpedia.org/dbpedia/spotlight/spotlight-model).
+You can find pre-built language models in the [DBpedia Databus](https://databus.dbpedia.org/dbpedia/spotlight/spotlight-model). 
+
+## Contribution
+
+The [DBpedia forum](https://forum.dbpedia.org/t/dbpedia-spotlight-how-to-help-improve-quality-of-multilingual-entity-extraction/785) describes some tasks needed to improve the language model building process. The main idea is to add more language models and/or improve the available models. 
 
 ## Citation
 
