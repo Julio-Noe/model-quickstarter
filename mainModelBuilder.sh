@@ -9,7 +9,9 @@ export MAVEN_OPTS="-Xmx26G"
 
 #StringLanguages="en_US-English de_DE-German nl_NL-Dutch sv_SE-Swedish pt_BR-Portuguese fr_FR-French es_ES-Spanish tr_TR-Turkish no_NO-Norwegian it_IT-Italian da_DK-Danish ja_JP-None cs_CZ-None hu_HU-Hungarian ru_RU-Russian zh_CN-None"
 #StringLanguages="en_US-English de_DE-German fr_FR-French"
-StringLanguages="ca_ES-Catalan"
+#StringLanguages="ca_ES-Catalan"
+
+StringLanguages=$1
 
 opennlp="None"
 eval="false"
