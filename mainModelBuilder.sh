@@ -292,85 +292,8 @@ for lang in $StringLanguages; do
 #    curl https://raw.githubusercontent.com/dbpedia-spotlight/model-quickstarter/master/model_readme.txt > $TARGET_DIR/README.txt
 #    curl "$WIKI_MIRROR/${LANGUAGE}wiki/latest/${LANGUAGE}wiki-latest-pages-articles.xml.bz2-rss.xml" | grep link | sed -e 's/^.*<link>//' -e 's/<[/]link>.*$//' | uniq >> $TARGET_DIR/README.txt
 
-########################################################################################################
-# Generating artifacts
-########################################################################################################
-
-     echo "Generating artifacts" >> /data/model-quickstarter-fork/debug.txt
-     date -u >> /data/model-quickstarter-fork/debug.txt
- set -e
-
-     MODEL_DIR="spotlight-model"
-     WIKISTAT_DIR="spotlight-wikistats"
-     #DERIVE_DATE=$(date +%F | sed 's/-/\./g')
-     #DERIVE_DATE="2020.09.17"
-     DERIVE_DATE=$ARTIFACT_VERSION
-
-     #compressing model files
-     cd "$BASE_DIR/models"
-     echo $(pwd)
-     if [[ ! -f "spotlight-model_lang=$LANGUAGE.tar.gz" ]]; then
-        #cd $TARGET_DIR/..
-        echo $(pwd)
-        echo tar -cvzf $BASE_ARTIFACTDIR/$MODEL_DIR/$ARTIFACT_VERSION/spotlight-model_lang\=$LANGUAGE.tar.gz "$LANGUAGE" && echo "$LANGUAGE"
-             tar -cvzf spotlight-model_lang\=$LANGUAGE.tar.gz "$LANGUAGE" && rm -r $LANGUAGE
-             cd "$BASE_DIR/models"
-     fi
-     #Creating the symbolic link
-     mkdir -p "$BASE_ARTIFACTDIR/$MODEL_DIR/$ARTIFACT_VERSION/"
-     ln -s "$(pwd)/spotlight-model_lang=$LANGUAGE.tar.gz" "$BASE_ARTIFACTDIR/$MODEL_DIR/$ARTIFACT_VERSION/spotlight-model_lang=$LANGUAGE.tar.gz"
-     echo "Sybolic link created for language $LANGUAGE"
-
-     #compressing wikistats files
-     cd "$WDIR"
-     bzip2 -zk *Counts && echo "bzip finished"
-      #rename "s/^/spotlight-wikistats_type=/" *Counts.bz2 && rename "s/Counts.bz2/Counts_lang=$LANGUAGE.tsv.bz2/" * && mv *tsv.bz2 $BASE_ARTIFACTDIR/$WIKISTAT_DIR/$ARTIFACT_VERSION/
-      rename "s/^/spotlight-wikistats_type=/" *Counts.bz2 && rename "s/Counts.bz2/Counts_lang=$LANGUAGE.tsv.bz2/" * && echo "process finished" 
-
-      #find . -name "*Counts.tsv" | tar -cvzf $ARTIFACT_DIR/$WIKISTAT_DIR/$DERIVE_DATE/spotlight-wikistat_lang\=$LANGUAGE.tar.gz --files-from - && echo "wikistats are done"
-
-########################################################################################################
-# Moving files
-########################################################################################################
-
-      echo "Moving files" >> /data/model-quickstarter-fork/debug.txt
-      date -u >> /data/model-quickstarter-fork/debug.txt
-
- 
-      cd "$BASE_DIR"
-      mkdir -p "data/$LANGUAGE" && mv "$WDIR"/*tsv.bz2 data/"$LANGUAGE"
-      if [[ ! -d "$BASE_ARTIFACTDIR/$WIKISTAT_DIR/$ARTIFACT_VERSION" ]]
-      then
-	      mkdir -p "$BASE_ARTIFACTDIR/$WIKISTAT_DIR/$ARTIFACT_VERSION"
-      fi
-      for FILE in $(ls data/$LANGUAGE/); do
-	      echo ln -s "$FILE" "$BASE_ARTIFACTDIR/$WIKISTAT_DIR/$ARTIFACT_VERSION/$FILE"
-	      ln -s "$BASE_DIR/data/$LANGUAGE/$FILE" "$BASE_ARTIFACTDIR/$WIKISTAT_DIR/$ARTIFACT_VERSION/$FILE"
-      done
-      #gzip $WDIR/*.nt &
-      #rm -r $WDIR
-
 done
-###############################################################################################################
-# Copy POM files
-###############################################################################################################
-
-echo "Copying pom files" >> /data/model-quickstarter-fork/debug.txt
-date -u >> /data/model-quickstarter-fork/debug.txt
-
-cd "$BASE_DIR"
-sed "s/POMVERSION/$DERIVE_DATE/g" pomTemplates/masterPom.xml > spotlight/pom.xml
-sed "s/POMVERSION/$DERIVE_DATE/g" pomTemplates/modelPom.xml > spotlight/spotlight-model/pom.xml
-sed "s/POMVERSION/$DERIVE_DATE/g" pomTemplates/wikistatsPom.xml > spotlight/spotlight-wikistats/pom.xml
-
-echo "#####ALL LANGUAGES DONE######" >> /data/model-quickstarter-fork/debug.txt 
-
 
 rm -r $WDIR
-
-
-chown -R extractor:extractor /data/model-quickstarter-fork/
-#su - extractor -c 'cd /data/model-quickstarter-fork/spotlight/spotlight-wikistats && mvn validate && mvn -Pwebdav deploy -X -e -T 20'
-su - extractor -c 'cd /data/model-quickstarter-fork/spotlight && mvn validate && mvn install'
 
 set +e
