@@ -24,6 +24,14 @@ In the command line run the following command:
 
 where LANG is the two digits language code, LOC is the two digits locator code, and Stemmer is the Snowball stemmer algorithm. The language and locator codes correspondes to the [BCP47](https://tools.ietf.org/html/bcp47) documentation. If the stemmer algorithm is not available the _None_ string must be used, e.g., ja_JP-None for the Japanese language. 
 
+The process is divided in the following steps:
+
+1. Preparing the data: Download the Wikipedia dump file for the specified language.
+2. DBpedia extraction: Downloads the redirects, disambiguations, and instance-type artifacts from the DBpedia Databus.
+3. Extracting wiki stats: It analyze the Wikipedia dump file to extract statistical information such as the number of uris (uriCounts), the number of times a token appears (tokenCounts), etc.
+4. Setting up Spotlight: It clones and setup the [dbpedia-spotlight-model](https://github.com/dbpedia-spotlight/dbpedia-spotlight-model) project to the working directory (wdir).
+5. Build Spotlight model: Collects the data from the previous steps to build the corresponding language model.
+
 ## Datasets
 
 You can find pre-built language models in the [DBpedia Databus](https://databus.dbpedia.org/dbpedia/spotlight/spotlight-model). 
