@@ -11,14 +11,16 @@ export MAVEN_OPTS="-Xmx26G"
 #StringLanguages="en_US-English de_DE-German fr_FR-French"
 #StringLanguages="ca_ES-Catalan"
 
-StringLanguages=$1
+StringLanguages="es_ES-Spanish"
+
+#StringLanguages=$1
 
 opennlp="None"
 eval="false"
 blacklist="false"
 
-#BASE_DIR=$(pwd)
-BASE_DIR="/data/model-quickstarter-fork"
+BASE_DIR=$(pwd)
+#BASE_DIR="/data/model-quickstarter-fork"
 
 BASE_WDIR="$BASE_DIR/wdir"
 BASE_ARTIFACTDIR="$BASE_DIR/spotlight"
@@ -26,7 +28,7 @@ BASE_ARTIFACTDIR="$BASE_DIR/spotlight"
 ARTIFACT_VERSION=$(date +%Y.%m.%d)
 #Iteration
 for lang in $StringLanguages; do
-     echo $lang >> /data/model-quickstarter-fork/debug.txt
+     echo $lang >> "$BASE_DIR/debug.txt"
      LANGUAGE=$(echo "$lang" | sed "s/_.*//g")
      STEMMER=$(echo "$lang" | sed "s/.*-//g")
     if [[ "$STEMMER" != "None" ]]; then
@@ -34,14 +36,14 @@ for lang in $StringLanguages; do
     fi
 
     LOCALE=$(echo "$lang" | sed "s/-.*//g")
-    echo "Language: $LANGUAGE">> /data/model-quickstarter-fork/debug.txt
-    echo "Stemmer: $STEMMER">> /data/model-quickstarter-fork/debug.txt
-    echo "Locale: $LOCALE">> /data/model-quickstarter-fork/debug.txt
+    echo "Language: $LANGUAGE">> "$BASE_DIR/debug.txt"
+    echo "Stemmer: $STEMMER">>"$BASE_DIR/debug.txt"
+    echo "Locale: $LOCALE">> "$BASE_DIR/debug.txt"
 
     TARGET_DIR="$BASE_DIR/models/$LANGUAGE"
     WDIR="$BASE_WDIR/$LOCALE"
-    echo ARTIFACT = "$ARTIFACT_VERSION">> /data/model-quickstarter-fork/debug.txt
-    echo "Working directory: $WDIR">> /data/model-quickstarter-fork/debug.txt
+    echo ARTIFACT = "$ARTIFACT_VERSION">> "$BASE_DIR/debug.txt"
+    echo "Working directory: $WDIR">> "$BASE_DIR/debug.txt"
 
     STOPWORDS="$BASE_DIR/$LANGUAGE/stopwords.list"
 
@@ -53,14 +55,14 @@ for lang in $StringLanguages; do
     fi
 
     mkdir -p "$WDIR"
-    echo "======================================================================">> /data/model-quickstarter-fork/debug.txt
+    echo "======================================================================">> "$BASE_DIR/debug.txt"
 
 ########################################################################################################
 # Preparing the data.
 ########################################################################################################
 
-    echo "Loading Wikipedia dump..." >> /data/model-quickstarter-fork/debug.txt
-    date -u >> /data/model-quickstarter-fork/debug.txt
+    echo "Loading Wikipedia dump..." >> "$BASE_DIR/debug.txt"
+    date -u >> "$BASE_DIR/debug.txt"
     if [ -z "$WIKI_MIRROR" ]; then
       WIKI_MIRROR="https://dumps.wikimedia.org/"
     fi
@@ -104,8 +106,8 @@ for lang in $StringLanguages; do
 
     Note of deviation from original index_db.sh:
     takes the direct AND transitive version of redirects and instance-types and the redirected version of disambiguation
-    " >> /data/model-quickstarter-fork/debug.txt
-    date -u >> /data/model-quickstarter-fork/debug.txt
+    " >>  "$BASE_DIR/debug.txt"
+    date -u >> "$BASE_DIR/debug.txt"
     cd "$BASE_WDIR"
     echo "BASE_WDIR = $BASE_WDIR"
     QUERY="PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -223,11 +225,33 @@ for lang in $StringLanguages; do
         #continue
    fi
 ########################################################################################################
+# Setting up Spotlight:
+########################################################################################################
+
+    echo "Setting up Spotlight" >> /data/model-quickstarter-fork/debug.txt
+    date -u >> "$BASE_DIR/debug.txt"
+    cd "$BASE_WDIR"
+
+    if [ -d dbpedia-spotlight ]; then
+        echo "Updating DBpedia Spotlight..."
+        ct dbpedia-spotlight
+        git reset --hard HEAD
+        git pull
+        mvn -T 1C -q -Dhttps.protocols=TLSv1.2 clean install
+    else
+        echo "Setting up DBpedia Spotlight..."
+        git clone -b multilingual --depth 1 https://github.com/Julio-Noe/dbpedia-spotlight-model
+        mv dbpedia-spotlight-model dbpedia-spotlight
+        cd dbpedia-spotlight
+        mvn -T 1C -q -Dhttps.protocols=TLSv1.2 install
+    fi
+
+########################################################################################################
 # Extracting wiki stats:
 ########################################################################################################
 
-    echo "Extracting wiki stats" >> /data/model-quickstarter-fork/debug.txt
-    date -u >> /data/model-quickstarter-fork/debug.txt
+    echo "Extracting wiki stats" >> "$BASE_DIR/debug.txt"
+    date -u >> "$BASE_DIR/debug.txt"
     cd "$BASE_WDIR"
     rm -Rf wikistatsextractor
 #    git clone --depth 1 https://github.com/dbpedia-spotlight/wikistatsextractor
@@ -241,7 +265,7 @@ for lang in $StringLanguages; do
 
     echo "MVN ARGUMENTS --output_folder $WDIR $LANGUAGE $3 $5Stemmer $WDIR/dump.xml $WDIR/stopwords.$LANGUAGE.list"
 
-    mvn install exec:java -Dexec.args="--output_folder $WDIR $LANGUAGE $LOCALE $STEMMER $WDIR/dump.xml.bz2 $WDIR/stopwords.$LANGUAGE.list" -X
+    mvn install exec:java -Dexec.args="--output_folder $WDIR $LANGUAGE $LOCALE $STEMMER $WDIR/dump.xml.bz2 $WDIR/stopwords.$LANGUAGE.list" -X -U
 
     if [ "$blacklist" != "None" ]; then
       echo "Removing blacklist URLs..."
@@ -253,33 +277,11 @@ for lang in $StringLanguages; do
 #    rm -f $WDIR/dump.xml
 
 ########################################################################################################
-# Setting up Spotlight:
-########################################################################################################
-
-    echo "Setting up Spotlight" >> /data/model-quickstarter-fork/debug.txt
-    date -u >> /data/model-quickstarter-fork/debug.txt
-    cd "$BASE_WDIR"
-
-    if [ -d dbpedia-spotlight ]; then
-        echo "Updating DBpedia Spotlight..."
-        cd dbpedia-spotlight
-        git reset --hard HEAD
-        git pull
-        mvn -T 1C -q -Dhttps.protocols=TLSv1.2 clean install
-    else
-        echo "Setting up DBpedia Spotlight..."
-        git clone -b multilingual --depth 1 https://github.com/Julio-Noe/dbpedia-spotlight-model
-        mv dbpedia-spotlight-model dbpedia-spotlight
-        cd dbpedia-spotlight
-        mvn -T 1C -q -Dhttps.protocols=TLSv1.2 install
-    fi
-
-########################################################################################################
 # Building Spotlight model:
 ########################################################################################################
 
-    echo "Building spotlight model" >> /data/model-quickstarter-fork/debug.txt
-    date -u >> /data/model-quickstarter-fork/debug.txt
+    echo "Building spotlight model" >> "$BASE_DIR/debug.txt"
+    date -u >> "$BASE_DIR/debug.txt"
     #Create the model:
     cd "$BASE_WDIR/dbpedia-spotlight"
 
